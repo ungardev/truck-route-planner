@@ -1,15 +1,33 @@
 import React from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
+import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Navigation, MapPin, Coffee, Fuel, Truck } from 'lucide-react';
+import { MapPin } from 'lucide-react';
 
-const ICON_MAP = {
-  ORIGIN: { color: 'blue', icon: 'play' },
-  PICKUP: { color: 'green', icon: 'truck' },
-  DROPOFF: { color: 'red', icon: 'flag' },
-  FUEL_STOP: { color: 'orange', icon: 'fuel' },
-  REST_BREAK: { color: 'purple', icon: 'coffee' }
+const createCustomIcon = (emoji, bgColor) => {
+  return L.divIcon({
+    className: 'custom-marker',
+    html: `<div style="
+      background-color: ${bgColor};
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      border: 2px solid white;
+    ">${emoji}</div>`,
+    iconSize: [32, 32],
+    iconAnchor: [16, 16],
+    popupAnchor: [0, -16]
+  });
 };
+
+const originIcon = createCustomIcon('📍', '#1E40AF');
+const pickupIcon = createCustomIcon('📦', '#059669');
+const dropoffIcon = createCustomIcon('🎯', '#DC2626');
 
 const RouteMap = ({ events = [], origin = null, pickup = null, dropoff = null }) => {
   const getRouteCoordinates = () => {
@@ -45,9 +63,9 @@ const RouteMap = ({ events = [], origin = null, pickup = null, dropoff = null })
     if (coords.length === 2) return 6;
     return 5;
   };
-  
+
   const routeCoords = getRouteCoordinates();
-  
+
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200">
       <div className="bg-gray-100 px-4 py-3 border-b border-gray-300">
@@ -56,7 +74,7 @@ const RouteMap = ({ events = [], origin = null, pickup = null, dropoff = null })
           Route Map
         </h3>
       </div>
-      
+
       <div className="h-80 relative">
         <MapContainer
           center={getCenter()}
@@ -68,40 +86,40 @@ const RouteMap = ({ events = [], origin = null, pickup = null, dropoff = null })
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
-          
+
           {origin && (
-            <Marker position={[origin.lat, origin.lng]}>
+            <Marker position={[origin.lat, origin.lng]} icon={originIcon}>
               <Popup>
                 <div className="text-sm">
-                  <strong className="flex items-center gap-1"><Navigation size={12} /> Origin</strong>
-                  <span className="text-gray-600">{origin.address || 'Starting point'}</span>
+                  <strong>📍 Origin</strong>
+                  <p className="text-gray-600">{origin.address || 'Starting point'}</p>
                 </div>
               </Popup>
             </Marker>
           )}
-          
+
           {pickup && (
-            <Marker position={[pickup.lat, pickup.lng]}>
+            <Marker position={[pickup.lat, pickup.lng]} icon={pickupIcon}>
               <Popup>
                 <div className="text-sm">
-                  <strong className="flex items-center gap-1"><Truck size={12} /> Pickup</strong>
-                  <span className="text-gray-600">{pickup.address || 'Pickup location'}</span>
+                  <strong>📦 Pickup</strong>
+                  <p className="text-gray-600">{pickup.address || 'Pickup location'}</p>
                 </div>
               </Popup>
             </Marker>
           )}
-          
+
           {dropoff && (
-            <Marker position={[dropoff.lat, dropoff.lng]}>
+            <Marker position={[dropoff.lat, dropoff.lng]} icon={dropoffIcon}>
               <Popup>
                 <div className="text-sm">
-                  <strong className="flex items-center gap-1"><MapPin size={12} /> Dropoff</strong>
-                  <span className="text-gray-600">{dropoff.address || 'Destination'}</span>
+                  <strong>🎯 Dropoff</strong>
+                  <p className="text-gray-600">{dropoff.address || 'Destination'}</p>
                 </div>
               </Popup>
             </Marker>
           )}
-          
+
           {routeCoords.length > 1 && (
             <Polyline
               positions={routeCoords}
@@ -112,16 +130,16 @@ const RouteMap = ({ events = [], origin = null, pickup = null, dropoff = null })
           )}
         </MapContainer>
       </div>
-      
+
       <div className="bg-gray-50 px-4 py-2 border-t border-gray-300 flex gap-4 text-xs">
         <span className="flex items-center gap-1">
-          <div className="w-3 h-3 rounded-full bg-blue-500"></div> Origin
+          <div className="w-3 h-3 rounded-full bg-blue-600"></div> Origin 📍
         </span>
         <span className="flex items-center gap-1">
-          <div className="w-3 h-3 rounded-full bg-green-500"></div> Pickup
+          <div className="w-3 h-3 rounded-full bg-green-600"></div> Pickup 📦
         </span>
         <span className="flex items-center gap-1">
-          <div className="w-3 h-3 rounded-full bg-red-500"></div> Dropoff
+          <div className="w-3 h-3 rounded-full bg-red-600"></div> Dropoff 🎯
         </span>
       </div>
     </div>

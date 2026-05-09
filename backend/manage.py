@@ -21,3 +21,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+from trip_planner.wsgi import application

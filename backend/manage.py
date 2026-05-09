@@ -4,6 +4,8 @@
 import os
 import sys
 
+from trip_planner.wsgi import application
+
 
 def main():
     """Run administrative tasks."""
@@ -21,5 +23,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-from trip_planner.wsgi import application

@@ -110,6 +110,12 @@ const TripForm = ({ onSubmit, loading = false }) => {
             type="text"
             value={formData.origin_address}
             onChange={(e) => setFormData(prev => ({ ...prev, origin_address: e.target.value }))}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                handleGeocode('origin');
+              }
+            }}
             placeholder="e.g., New York, NY"
             className={inputClass}
           />
@@ -139,6 +145,12 @@ const TripForm = ({ onSubmit, loading = false }) => {
             type="text"
             value={formData.pickup_address}
             onChange={(e) => setFormData(prev => ({ ...prev, pickup_address: e.target.value }))}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                handleGeocode('pickup');
+              }
+            }}
             placeholder="e.g., Newark, NJ (Warehouse)"
             className={inputClass}
           />
@@ -168,6 +180,12 @@ const TripForm = ({ onSubmit, loading = false }) => {
             type="text"
             value={formData.dropoff_address}
             onChange={(e) => setFormData(prev => ({ ...prev, dropoff_address: e.target.value }))}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                handleGeocode('dropoff');
+              }
+            }}
             placeholder="e.g., Philadelphia, PA"
             className={inputClass}
           />
@@ -195,6 +213,20 @@ const TripForm = ({ onSubmit, loading = false }) => {
           type="number"
           value={formData.current_cycle_hours}
           onChange={(e) => setFormData(prev => ({ ...prev, current_cycle_hours: e.target.value }))}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              if (geocodedLocations.origin && geocodedLocations.pickup && geocodedLocations.dropoff) {
+                const submitData = {
+                  origin: geocodedLocations.origin,
+                  pickup: geocodedLocations.pickup,
+                  dropoff: geocodedLocations.dropoff,
+                  current_cycle_hours: parseFloat(formData.current_cycle_hours)
+                };
+                onSubmit(submitData);
+              }
+            }
+          }}
           min="0"
           max="70"
           step="0.5"

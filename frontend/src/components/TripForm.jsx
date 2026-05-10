@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { MapPin, Search, Truck, Navigation } from 'lucide-react';
 
-const TripForm = ({ onSubmit, loading = false }) => {
+export default function TripForm({ onSubmit, loading = false }) {
   const [formData, setFormData] = useState({
     origin_address: '',
     pickup_address: '',
@@ -25,7 +25,6 @@ const TripForm = ({ onSubmit, loading = false }) => {
 
   const geocodeAddress = async (address, locationKey) => {
     if (!address.trim()) return null;
-    
     setGeocoding(prev => ({ ...prev, [locationKey]: true }));
     setGeocodingError('');
     
@@ -36,7 +35,6 @@ const TripForm = ({ onSubmit, loading = false }) => {
       );
       
       if (!response.ok) throw new Error('Geocoding failed');
-      
       const data = await response.json();
       
       if (data && data.length > 0) {
@@ -45,7 +43,6 @@ const TripForm = ({ onSubmit, loading = false }) => {
           lng: parseFloat(data[0].lon),
           address: data[0].display_name
         };
-        
         setGeocodedLocations(prev => ({ ...prev, [locationKey]: result }));
         return result;
       } else {
@@ -74,23 +71,24 @@ const TripForm = ({ onSubmit, loading = false }) => {
       setGeocodingError('Please geocode all locations first');
       return;
     }
-    
-    const submitData = {
+    onSubmit({
       origin: geocodedLocations.origin,
       pickup: geocodedLocations.pickup,
       dropoff: geocodedLocations.dropoff,
       current_cycle_hours: parseFloat(formData.current_cycle_hours)
-    };
-    onSubmit(submitData);
+    });
   };
   
-  const onEnterPress = (field) => {
-    if (field === 'cycle') {
-      if (geocodedLocations.origin && geocodedLocations.pickup && geocodedLocations.dropoff) {
-        handleSubmit();
+  const handleKeyDown = (e, field) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (field === 'cycle') {
+        if (geocodedLocations.origin && geocodedLocations.pickup && geocodedLocations.dropoff) {
+          handleSubmit();
+        }
+      } else {
+        handleGeocode(field);
       }
-    } else {
-      handleGeocode(field);
     }
   };
   
@@ -108,16 +106,11 @@ const TripForm = ({ onSubmit, loading = false }) => {
             type="text"
             value={formData.origin_address}
             onChange={(e) => setFormData(prev => ({ ...prev, origin_address: e.target.value }))}
-            onKeyDown={(e) => e.key === 'Enter' && onEnterPress('origin')}
+            onKeyDown={(e) => handleKeyDown(e, 'origin')}
             placeholder="e.g., New York, NY"
             className={inputClass}
           />
-          <button
-            type="button"
-            onClick={() => handleGeocode('origin')}
-            disabled={geocoding.origin || !formData.origin_address}
-            className="px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
-          >
+          <button type="button" onClick={() => handleGeocode('origin')} className="px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
             <Search size={16} />
           </button>
         </div>
@@ -138,16 +131,11 @@ const TripForm = ({ onSubmit, loading = false }) => {
             type="text"
             value={formData.pickup_address}
             onChange={(e) => setFormData(prev => ({ ...prev, pickup_address: e.target.value }))}
-            onKeyDown={(e) => e.key === 'Enter' && onEnterPress('pickup')}
+            onKeyDown={(e) => handleKeyDown(e, 'pickup')}
             placeholder="e.g., Newark, NJ (Warehouse)"
             className={inputClass}
           />
-          <button
-            type="button"
-            onClick={() => handleGeocode('pickup')}
-            disabled={geocoding.pickup || !formData.pickup_address}
-            className="px-3 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50"
-          >
+          <button type="button" onClick={() => handleGeocode('pickup')} className="px-3 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
             <Search size={16} />
           </button>
         </div>
@@ -168,16 +156,11 @@ const TripForm = ({ onSubmit, loading = false }) => {
             type="text"
             value={formData.dropoff_address}
             onChange={(e) => setFormData(prev => ({ ...prev, dropoff_address: e.target.value }))}
-            onKeyDown={(e) => e.key === 'Enter' && onEnterPress('dropoff')}
+            onKeyDown={(e) => handleKeyDown(e, 'dropoff')}
             placeholder="e.g., Philadelphia, PA"
             className={inputClass}
           />
-          <button
-            type="button"
-            onClick={() => handleGeocode('dropoff')}
-            disabled={geocoding.dropoff || !formData.dropoff_address}
-            className="px-3 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50"
-          >
+          <button type="button" onClick={() => handleGeocode('dropoff')} className="px-3 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">
             <Search size={16} />
           </button>
         </div>
@@ -196,7 +179,7 @@ const TripForm = ({ onSubmit, loading = false }) => {
           type="number"
           value={formData.current_cycle_hours}
           onChange={(e) => setFormData(prev => ({ ...prev, current_cycle_hours: e.target.value }))}
-          onKeyDown={(e) => e.key === 'Enter' && onEnterPress('cycle')}
+          onKeyDown={(e) => handleKeyDown(e, 'cycle')}
           min="0"
           max="70"
           step="0.5"
@@ -217,22 +200,10 @@ const TripForm = ({ onSubmit, loading = false }) => {
         type="button"
         onClick={handleSubmit}
         disabled={loading || !geocodedLocations.origin || !geocodedLocations.pickup || !geocodedLocations.dropoff}
-        className="w-full py-3 bg-blue-900 text-white font-semibold rounded-lg hover:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        className="w-full py-3 bg-blue-900 text-white font-semibold rounded-lg hover:bg-blue-800 disabled:opacity-50 flex items-center justify-center gap-2"
       >
-        {loading ? (
-          <>
-            <span className="animate-spin">⟳</span>
-            Calculating...
-          </>
-        ) : (
-          <>
-            <Navigation size={18} />
-            Calculate Route
-          </>
-        )}
+        {loading ? <><span className="animate-spin">⟳</span> Calculating...</> : <><Navigation size={18} /> Calculate Route</>}
       </button>
     </div>
   );
-};
-
-export default TripForm;
+}

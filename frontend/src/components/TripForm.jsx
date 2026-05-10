@@ -32,11 +32,7 @@ const TripForm = ({ onSubmit, loading = false }) => {
     try {
       const response = await fetch(
         `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`,
-        {
-          headers: {
-            'User-Agent': 'SpotterAI-TruckRoutePlanner/1.0'
-          }
-        }
+        { headers: { 'User-Agent': 'SpotterAI-TruckRoutePlanner/1.0' } }
       );
       
       if (!response.ok) throw new Error('Geocoding failed');
@@ -50,11 +46,7 @@ const TripForm = ({ onSubmit, loading = false }) => {
           address: data[0].display_name
         };
         
-        setGeocodedLocations(prev => ({
-          ...prev,
-          [locationKey]: result
-        }));
-        
+        setGeocodedLocations(prev => ({ ...prev, [locationKey]: result }));
         return result;
       } else {
         setGeocodingError(`Could not find location: ${address}`);
@@ -74,53 +66,38 @@ const TripForm = ({ onSubmit, loading = false }) => {
       pickup: formData.pickup_address,
       dropoff: formData.dropoff_address
     };
-    
     await geocodeAddress(addressMap[field], field);
   };
   
-  const handleSubmit = (submitData) => {
+  const handleSubmit = () => {
     if (!geocodedLocations.origin || !geocodedLocations.pickup || !geocodedLocations.dropoff) {
       setGeocodingError('Please geocode all locations first');
       return;
     }
     
+    const submitData = {
+      origin: geocodedLocations.origin,
+      pickup: geocodedLocations.pickup,
+      dropoff: geocodedLocations.dropoff,
+      current_cycle_hours: parseFloat(formData.current_cycle_hours)
+    };
     onSubmit(submitData);
   };
   
-  const handleKeyDown = (e, field) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      e.stopPropagation();
-      
-      if (field === 'cycle') {
-        if (geocodedLocations.origin && geocodedLocations.pickup && geocodedLocations.dropoff) {
-          const submitData = {
-            origin: geocodedLocations.origin,
-            pickup: geocodedLocations.pickup,
-            dropoff: geocodedLocations.dropoff,
-            current_cycle_hours: parseFloat(formData.current_cycle_hours)
-          };
-          handleSubmit(submitData);
-        } else {
-          setGeocodingError('Please geocode all locations first');
-        }
-      } else {
-        handleGeocode(field);
+  const onEnterPress = (field) => {
+    if (field === 'cycle') {
+      if (geocodedLocations.origin && geocodedLocations.pickup && geocodedLocations.dropoff) {
+        handleSubmit();
       }
-    }
-  };
-  
-  const handleFormKeyDown = (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      e.stopPropagation();
+    } else {
+      handleGeocode(field);
     }
   };
   
   const inputClass = "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent";
   
   return (
-    <form onSubmit={(e) => { e.preventDefault(); }} onKeyDown={handleFormKeyDown} className="space-y-4">
+    <div className="space-y-4">
       <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
         <label className="flex items-center gap-2 text-sm font-semibold text-blue-900 mb-2">
           <Navigation size={16} />
@@ -131,7 +108,7 @@ const TripForm = ({ onSubmit, loading = false }) => {
             type="text"
             value={formData.origin_address}
             onChange={(e) => setFormData(prev => ({ ...prev, origin_address: e.target.value }))}
-            onKeyDown={(e) => handleKeyDown(e, 'origin')}
+            onKeyDown={(e) => e.key === 'Enter' && onEnterPress('origin')}
             placeholder="e.g., New York, NY"
             className={inputClass}
           />
@@ -161,7 +138,7 @@ const TripForm = ({ onSubmit, loading = false }) => {
             type="text"
             value={formData.pickup_address}
             onChange={(e) => setFormData(prev => ({ ...prev, pickup_address: e.target.value }))}
-            onKeyDown={(e) => handleKeyDown(e, 'pickup')}
+            onKeyDown={(e) => e.key === 'Enter' && onEnterPress('pickup')}
             placeholder="e.g., Newark, NJ (Warehouse)"
             className={inputClass}
           />
@@ -191,7 +168,7 @@ const TripForm = ({ onSubmit, loading = false }) => {
             type="text"
             value={formData.dropoff_address}
             onChange={(e) => setFormData(prev => ({ ...prev, dropoff_address: e.target.value }))}
-            onKeyDown={(e) => handleKeyDown(e, 'dropoff')}
+            onKeyDown={(e) => e.key === 'Enter' && onEnterPress('dropoff')}
             placeholder="e.g., Philadelphia, PA"
             className={inputClass}
           />
@@ -219,7 +196,7 @@ const TripForm = ({ onSubmit, loading = false }) => {
           type="number"
           value={formData.current_cycle_hours}
           onChange={(e) => setFormData(prev => ({ ...prev, current_cycle_hours: e.target.value }))}
-          onKeyDown={(e) => handleKeyDown(e, 'cycle')}
+          onKeyDown={(e) => e.key === 'Enter' && onEnterPress('cycle')}
           min="0"
           max="70"
           step="0.5"
@@ -238,19 +215,7 @@ const TripForm = ({ onSubmit, loading = false }) => {
       
       <button
         type="button"
-        onClick={() => {
-          if (geocodedLocations.origin && geocodedLocations.pickup && geocodedLocations.dropoff) {
-            const submitData = {
-              origin: geocodedLocations.origin,
-              pickup: geocodedLocations.pickup,
-              dropoff: geocodedLocations.dropoff,
-              current_cycle_hours: parseFloat(formData.current_cycle_hours)
-            };
-            handleSubmit(submitData);
-          } else {
-            setGeocodingError('Please geocode all locations first');
-          }
-        }}
+        onClick={handleSubmit}
         disabled={loading || !geocodedLocations.origin || !geocodedLocations.pickup || !geocodedLocations.dropoff}
         className="w-full py-3 bg-blue-900 text-white font-semibold rounded-lg hover:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
       >
@@ -266,7 +231,7 @@ const TripForm = ({ onSubmit, loading = false }) => {
           </>
         )}
       </button>
-    </form>
+    </div>
   );
 };
 
